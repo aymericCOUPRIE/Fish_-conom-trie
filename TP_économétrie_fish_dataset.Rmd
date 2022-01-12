@@ -1,0 +1,124 @@
+---
+title: "TP_économétrie_fish_dataset"
+author: "Aymeric COUPRIE"
+date: "08/01/2022"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(ggplot2)
+library(ggcorrplot)
+library(GGally)
+library(caret)
+theme_set(theme_bw())
+colors = c("#EA5455", "#F07B3F")
+```
+
+### Peut-on prédire si les poissons appartiennent à l'espèce étudiée en fonction de leur mensuration ?
+
+## Choix des technologies
+
+Pour faire ce sujet nous avions la possibilité de choisir le langage de programmation souhaité. J'ai donc choisis d'utiliser R afin de mettre en pratique ce que nous avons vu en cours. 
+
+## Récupération des données
+
+Ici, on a un jeu de données sous format csv, qu'on va lire et importer en R, en utilisant le délimiteur ";" et en gardant les en-tête des colonnes.
+```{r}
+# Lecture du csv
+fish_dataset <- read.table("Fish.csv", header = TRUE, sep = ";")
+```
+
+## Représentation des données
+Cette phase permet d'avoir quelques informations sur le dataset que l'on vient d'importer.
+On a donc le nombre de variables contenues dans le dataset.
+Dans un deuxième temps on affiche les n premières lignes (5 par défaut) du dataset afin d'avoir un aperçu générales des données contenues.
+```{r}
+str(fish_dataset)
+head(fish_dataset)
+```
+
+Pour continuer la visualisation rapide des données on va afficher un graphe qui permet de séparer les 2 espèces et d'avoir le nombre de poissons pour chacune.
+```{r}
+# Graphe répartion des effectifs des espèces
+ggplot(fish_dataset, aes(x = as.factor(Species))) +
+  geom_bar(aes(fill = as.factor(Species))) +
+  scale_fill_manual(values = colors) +
+  xlab("Species") +
+  ylab("Number") +
+  ggtitle("Species number") +
+  labs(fill = "Species")
+```
+
+## Séparation des données
+Lors de cette phase on sépare le dataset en 2 :
+On décompose les données en un échantillon d'apprentissage utilisé pour apprendre le modèle contenant 70% des données et un échantillon de test tester les performances en prédiction du modèle (et sa capacité de généralisation) comprenant les 30% des données restantes.
+```{r}
+# taille de l'échantillon
+n <- nrow(fish_dataset)
+
+train_index <- sample(x = 1:n, size = round(0.7 * n), replace = FALSE)
+
+# Répartion du dataset de base
+train_dataset <- fish_dataset[train_index,]
+test_dataset <- fish_dataset[-train_index,]
+```
+
+## Training du model
+
+Pour la prochaine étape, on va essayer de prédire à quelle espèce le poisson étudiée appartient.
+
+### Régression backward
+
+Ici on tente d'améliorer le modèle en partant du modèle complet puis en essayant de retirer des colonnes qui pourraient fausser la précision du modèle. 
+```{r}
+# Apprentissage
+log_reg2 <- glm(Species ~ ., data = train_dataset, family="binomial")
+log_reg2 <- step(log_reg2, direction="backward")
+summary(log_reg2)
+
+# Prédiction
+hat_pi2 <- predict(log_reg2, newdata = test_dataset, type = "response")
+hat_y2 <- as.integer(hat_pi2 > 0.5)
+```
+### Régression forward
+
+C'est le même principe que la sélection backward sauf que cette fois ci. On part du modèle vide et on ajoute les colonnes une à une afin de terminer avec le modèle complet et ensuite on regarde quel combinaison de colonnes offre le modèle le plus performant.
+```{r}
+# Apprenstissage
+log_reg3 <- glm(Species ~ 1, data = train_dataset, family="binomial")
+log_reg3 <- step(log_reg3, direction="forward", scope=list(lower=log_reg3, upper=~Weight+Height+Width))
+summary(log_reg3)
+
+# Prédiction
+hat_pi3 <- predict(log_reg3, newdata = test_dataset, type = "response")
+hat_y3 <- as.integer(hat_pi3 > 0.5)
+```
+
+On peut voir que la sélection backward et forward donnent le même résultat. Afin d'obtenir un meilleur score il ne faut sélectionner que les colonnes Height & Weight.
+
+
+### Matrices de confusion
+
+Matrice de confusion pour le système de régression avec sélection des bonnes colonnes. Ici on se sert du résultat de la sélection backward mais utiliser la sélection forward aurait abouti au même résultat
+```{r}
+# Matrice de confusion
+confusionMatrix(data = as.factor(hat_y2), reference = as.factor(test_dataset$Species), positive = "1")
+```
+
+Grâce à ce modèle on trouve une accuracy de ???.  
+ - Le nombre supérieur gauche : vrais positifs (espèce 1, classé 1)  
+ - Le nombre supérieur droit : faux positifs (espèce 0, classé 1)  
+ - Le nombre en bas à gauche : faux négatifs (espèce 1, classé 0)  
+ - Le nombre en bas à droite : vrais négatifs (espèce 0, classé 0)  
+
+On peut voir que le ratio de positifs est plutot bon, de meme qu'il y a peu de négatifs. Le modèle semble donc bien fonctionner
+
+## Remarque
+
+En raison du nombre de données assez faible, on peut avoir des résultats qui varient selon la répartition des données entre le dataset de train et de test. En effet l'accuracy finale peut varier énormément en raison d'une approche parfois différente, selon la répartition des données, il peut notement s'avérer que la colonne Weight soit utile.
