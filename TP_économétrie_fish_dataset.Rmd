@@ -20,6 +20,8 @@ theme_set(theme_bw())
 colors = c("#EA5455", "#F07B3F")
 ```
 
+https://github.com/aymericCOUPRIE/Fish_econometrie.git
+
 ### Peut-on prédire si les poissons appartiennent à l'espèce étudiée en fonction de leur mensuration ?
 
 ## Choix des technologies
@@ -107,15 +109,21 @@ On peut voir que la sélection backward et forward donnent le même résultat. A
 
 Matrice de confusion pour le système de régression avec sélection des bonnes colonnes. Ici on se sert du résultat de la sélection backward mais utiliser la sélection forward aurait abouti au même résultat
 ```{r}
+result <- table(hat_y2, test_dataset$Species)
+result
+
+#Accuracy
+accuracy <- round((result[1] + result[4]) / sum(result), 4)
+
 # Matrice de confusion
 confusionMatrix(data = as.factor(hat_y2), reference = as.factor(test_dataset$Species), positive = "1")
 ```
 
-Grâce à ce modèle on trouve une accuracy de ???.  
- - Le nombre supérieur gauche : vrais positifs (espèce 1, classé 1)  
- - Le nombre supérieur droit : faux positifs (espèce 0, classé 1)  
- - Le nombre en bas à gauche : faux négatifs (espèce 1, classé 0)  
- - Le nombre en bas à droite : vrais négatifs (espèce 0, classé 0)  
+Grâce à ce modèle on trouve une accuracy de `r accuracy`.  
+ - `r result[4]` : vrais positifs (espèce 1, classé 1)  
+ - `r result[1]` : faux négatifs (espèce 0, classé 1)  
+ - `r result[2]` : faux positifs (espèce 1, classé 0)  
+ - `r result[3]` : vrais négatifs (espèce 0, classé 0)  
 
 On peut voir que le ratio de positifs est plutot bon, de meme qu'il y a peu de négatifs. Le modèle semble donc bien fonctionner
 

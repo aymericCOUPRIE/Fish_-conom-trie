@@ -174,8 +174,8 @@ pre code {
 </div>
 
 
+<p><a href="https://github.com/aymericCOUPRIE/Fish_econometrie.git" class="uri">https://github.com/aymericCOUPRIE/Fish_econometrie.git</a></p>
 <div id="peut-on-prédire-si-les-poissons-appartiennent-à-lespèce-étudiée-en-fonction-de-leur-mensuration" class="section level3">
-<a href="https://github.com/aymericCOUPRIE/Fish_econometrie.git">https://github.com/aymericCOUPRIE/Fish_econometrie.git</a>
 <h3>Peut-on prédire si les poissons appartiennent à l’espèce étudiée en fonction de leur mensuration ?</h3>
 </div>
 <div id="choix-des-technologies" class="section level2">
@@ -229,31 +229,28 @@ test_dataset &lt;- fish_dataset[-train_index,]</code></pre>
 <div id="training-du-model" class="section level2">
 <h2>Training du model</h2>
 <p>Pour la prochaine étape, on va essayer de prédire à quelle espèce le poisson étudiée appartient.</p>
-</div>
-<div id="régression-backward" class="section level2">
-<h3>Régression backward</h2>
+<div id="régression-backward" class="section level3">
+<h3>Régression backward</h3>
 <p>Ici on tente d’améliorer le modèle en partant du modèle complet puis en essayant de retirer des colonnes qui pourraient fausser la précision du modèle.</p>
 <pre class="r"><code># Apprentissage
-log_reg2 &lt;- glm(Species ~ ., data = train_dataset, family=&quot;binomial&quot;)</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre class="r"><code>log_reg2 &lt;- step(log_reg2, direction=&quot;backward&quot;)</code></pre>
-<pre><code>## Start:  AIC=26.4
-## Species ~ Weight + Height + Width</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>##          Df Deviance     AIC
-## - Width   1   18.641  24.641
-## &lt;none&gt;        18.405  26.405
-## - Weight  1   34.044  40.044
-## - Height  1   97.420 103.420</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>## 
-## Step:  AIC=24.64
+log_reg2 &lt;- glm(Species ~ ., data = train_dataset, family=&quot;binomial&quot;)
+log_reg2 &lt;- step(log_reg2, direction=&quot;backward&quot;)</code></pre>
+<pre><code>## Start:  AIC=44.32
+## Species ~ Weight + Height + Width
+## 
+##          Df Deviance     AIC
+## - Width   1   36.992  42.992
+## &lt;none&gt;        36.315  44.315
+## - Weight  1   46.226  52.226
+## - Height  1  104.077 110.077
+## 
+## Step:  AIC=42.99
 ## Species ~ Weight + Height
 ## 
 ##          Df Deviance     AIC
-## &lt;none&gt;        18.641  24.641
-## - Weight  1   72.383  76.383
-## - Height  1  102.727 106.727</code></pre>
+## &lt;none&gt;        36.992  42.992
+## - Weight  1   90.190  94.190
+## - Height  1  107.545 111.545</code></pre>
 <pre class="r"><code>summary(log_reg2)</code></pre>
 <pre><code>## 
 ## Call:
@@ -262,59 +259,56 @@ log_reg2 &lt;- glm(Species ~ ., data = train_dataset, family=&quot;binomial&quot
 ## 
 ## Deviance Residuals: 
 ##      Min        1Q    Median        3Q       Max  
-## -1.85115   0.00000   0.00000   0.02486   1.68939  
+## -2.45605  -0.05353  -0.00017   0.26425   1.83670  
 ## 
 ## Coefficients:
-##              Estimate Std. Error z value Pr(&gt;|z|)  
-## (Intercept)  54.36631   22.72302   2.393   0.0167 *
-## Weight        0.14637    0.06083   2.406   0.0161 *
-## Height      -11.67713    4.87573  -2.395   0.0166 *
+##             Estimate Std. Error z value Pr(&gt;|z|)   
+## (Intercept) 20.37461    6.21790   3.277  0.00105 **
+## Weight       0.05824    0.01905   3.057  0.00224 **
+## Height      -4.50418    1.39249  -3.235  0.00122 **
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 108.080  on 77  degrees of freedom
-## Residual deviance:  18.641  on 75  degrees of freedom
-## AIC: 24.641
+##     Null deviance: 107.926  on 77  degrees of freedom
+## Residual deviance:  36.992  on 75  degrees of freedom
+## AIC: 42.992
 ## 
-## Number of Fisher Scoring iterations: 10</code></pre>
+## Number of Fisher Scoring iterations: 8</code></pre>
 <pre class="r"><code># Prédiction
 hat_pi2 &lt;- predict(log_reg2, newdata = test_dataset, type = &quot;response&quot;)
 hat_y2 &lt;- as.integer(hat_pi2 &gt; 0.5)</code></pre>
 </div>
-<div id="régression-forward" class="section level2">
-<h3>Régression forward</h2>
+<div id="régression-forward" class="section level3">
+<h3>Régression forward</h3>
 <p>C’est le même principe que la sélection backward sauf que cette fois ci. On part du modèle vide et on ajoute les colonnes une à une afin de terminer avec le modèle complet et ensuite on regarde quel combinaison de colonnes offre le modèle le plus performant.</p>
 <pre class="r"><code># Apprenstissage
 log_reg3 &lt;- glm(Species ~ 1, data = train_dataset, family=&quot;binomial&quot;)
 log_reg3 &lt;- step(log_reg3, direction=&quot;forward&quot;, scope=list(lower=log_reg3, upper=~Weight+Height+Width))</code></pre>
-<pre><code>## Start:  AIC=110.08
+<pre><code>## Start:  AIC=109.93
 ## Species ~ 1
 ## 
-##          Df Deviance     AIC
-## + Height  1   72.383  76.383
-## + Weight  1  102.727 106.727
-## + Width   1  105.985 109.985
-## &lt;none&gt;       108.080 110.080
+##          Df Deviance    AIC
+## + Height  1    90.19  94.19
+## &lt;none&gt;        107.93 109.93
+## + Weight  1   107.55 111.55
+## + Width   1   107.92 111.92
 ## 
-## Step:  AIC=76.38
-## Species ~ Height</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>##          Df Deviance    AIC
-## + Weight  1   18.641 24.641
-## + Width   1   34.044 40.044
-## &lt;none&gt;        72.383 76.383</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>## 
-## Step:  AIC=24.64
-## Species ~ Height + Weight</code></pre>
-<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
-
-## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
-<pre><code>##         Df Deviance    AIC
-## &lt;none&gt;       18.641 24.641
-## + Width  1   18.405 26.405</code></pre>
+## Step:  AIC=94.19
+## Species ~ Height
+## 
+##          Df Deviance    AIC
+## + Weight  1   36.992 42.992
+## + Width   1   46.226 52.226
+## &lt;none&gt;        90.190 94.190
+## 
+## Step:  AIC=42.99
+## Species ~ Height + Weight
+## 
+##         Df Deviance    AIC
+## &lt;none&gt;       36.992 42.992
+## + Width  1   36.315 44.315</code></pre>
 <pre class="r"><code>summary(log_reg3)</code></pre>
 <pre><code>## 
 ## Call:
@@ -323,64 +317,74 @@ log_reg3 &lt;- step(log_reg3, direction=&quot;forward&quot;, scope=list(lower=lo
 ## 
 ## Deviance Residuals: 
 ##      Min        1Q    Median        3Q       Max  
-## -1.85115   0.00000   0.00000   0.02486   1.68939  
+## -2.45605  -0.05353  -0.00017   0.26425   1.83670  
 ## 
 ## Coefficients:
-##              Estimate Std. Error z value Pr(&gt;|z|)  
-## (Intercept)  54.36631   22.72302   2.393   0.0167 *
-## Height      -11.67713    4.87573  -2.395   0.0166 *
-## Weight        0.14637    0.06083   2.406   0.0161 *
+##             Estimate Std. Error z value Pr(&gt;|z|)   
+## (Intercept) 20.37461    6.21790   3.277  0.00105 **
+## Height      -4.50418    1.39249  -3.235  0.00122 **
+## Weight       0.05824    0.01905   3.057  0.00224 **
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 108.080  on 77  degrees of freedom
-## Residual deviance:  18.641  on 75  degrees of freedom
-## AIC: 24.641
+##     Null deviance: 107.926  on 77  degrees of freedom
+## Residual deviance:  36.992  on 75  degrees of freedom
+## AIC: 42.992
 ## 
-## Number of Fisher Scoring iterations: 10</code></pre>
+## Number of Fisher Scoring iterations: 8</code></pre>
 <pre class="r"><code># Prédiction
 hat_pi3 &lt;- predict(log_reg3, newdata = test_dataset, type = &quot;response&quot;)
 hat_y3 &lt;- as.integer(hat_pi3 &gt; 0.5)</code></pre>
 <p>On peut voir que la sélection backward et forward donnent le même résultat. Afin d’obtenir un meilleur score il ne faut sélectionner que les colonnes Height &amp; Weight.</p>
+</div>
 <div id="matrices-de-confusion" class="section level3">
 <h3>Matrices de confusion</h3>
 <p>Matrice de confusion pour le système de régression avec sélection des bonnes colonnes. Ici on se sert du résultat de la sélection backward mais utiliser la sélection forward aurait abouti au même résultat</p>
-<pre class="r"><code># Matrice de confusion
+<pre class="r"><code>result &lt;- table(hat_y2, test_dataset$Species)
+result</code></pre>
+<pre><code>##       
+## hat_y2  0  1
+##      0 13  1
+##      1  1 18</code></pre>
+<pre class="r"><code>#Accuracy
+accuracy &lt;- round((result[1] + result[4]) / sum(result), 4)
+
+# Matrice de confusion
 confusionMatrix(data = as.factor(hat_y2), reference = as.factor(test_dataset$Species), positive = &quot;1&quot;)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction  0  1
-##          0 10  1
-##          1  5 17
+##          0 13  1
+##          1  1 18
 ##                                           
-##                Accuracy : 0.8182          
-##                  95% CI : (0.6454, 0.9302)
-##     No Information Rate : 0.5455          
-##     P-Value [Acc &gt; NIR] : 0.001007        
+##                Accuracy : 0.9394          
+##                  95% CI : (0.7977, 0.9926)
+##     No Information Rate : 0.5758          
+##     P-Value [Acc &gt; NIR] : 3.82e-06        
 ##                                           
-##                   Kappa : 0.625           
+##                   Kappa : 0.8759          
 ##                                           
-##  Mcnemar&#39;s Test P-Value : 0.220671        
+##  Mcnemar&#39;s Test P-Value : 1               
 ##                                           
-##             Sensitivity : 0.9444          
-##             Specificity : 0.6667          
-##          Pos Pred Value : 0.7727          
-##          Neg Pred Value : 0.9091          
-##              Prevalence : 0.5455          
-##          Detection Rate : 0.5152          
-##    Detection Prevalence : 0.6667          
-##       Balanced Accuracy : 0.8056          
+##             Sensitivity : 0.9474          
+##             Specificity : 0.9286          
+##          Pos Pred Value : 0.9474          
+##          Neg Pred Value : 0.9286          
+##              Prevalence : 0.5758          
+##          Detection Rate : 0.5455          
+##    Detection Prevalence : 0.5758          
+##       Balanced Accuracy : 0.9380          
 ##                                           
 ##        &#39;Positive&#39; Class : 1               
 ## </code></pre>
-<p>Grâce à ce modèle on trouve une accuracy de <b>0.8182</b>.<br />
-- Le nombre supérieur gauche : vrais positifs (espèce 1, classé 1)<br />
-- Le nombre supérieur droit : faux positifs (espèce 0, classé 1)<br />
-- Le nombre en bas à gauche : faux négatifs (espèce 1, classé 0)<br />
-- Le nombre en bas à droite : vrais négatifs (espèce 0, classé 0)</p>
+<p>Grâce à ce modèle on trouve une accuracy de 0.9394.<br />
+- 18 : vrais positifs (espèce 1, classé 1)<br />
+- 13 : faux négatifs (espèce 0, classé 1)<br />
+- 1 : faux positifs (espèce 1, classé 0)<br />
+- 1 : vrais négatifs (espèce 0, classé 0)</p>
 <p>On peut voir que le ratio de positifs est plutot bon, de meme qu’il y a peu de négatifs. Le modèle semble donc bien fonctionner</p>
 </div>
 </div>
